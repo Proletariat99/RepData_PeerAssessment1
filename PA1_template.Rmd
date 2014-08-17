@@ -3,17 +3,81 @@
 
 ## Loading and preprocessing the data
 
+Below, the data are read using read.csv, then incomplete cases are eliminated and I split the data frame using split by $date.  
+
+```{r echo=TRUE}
+options(scipen=4)
+activity_filename <- "activity.csv"
+act <- read.csv(activity_filename, stringsAsFactors=FALSE)
+complete_act <- act[complete.cases(act),]
+bydate_act <- split(complete_act, complete_act$date, drop=TRUE)
+coltest <- bydate_act[[1]][1:3,1:3]
+print(coltest)
+```
 
 
 ## What is mean total number of steps taken per day?
 
+This code calculates the mean # of steps taken per day by taking the split data sets and looping over them to sum the steps per day and then append to a list, then takes the mean & median of the list.  
 
+
+```{r echo=TRUE}
+c <- complete_act #lazeh
+a <- bydate_act  #lazy
+daily_steps <- vector()
+for(date in bydate_act){
+ daily_steps <- append(daily_steps, as.numeric(sum(date$steps)))
+#  mean(bydate_act[["2012-11-29"]]$"steps")      # just for future use, if necessary 
+}
+myhist <- hist(daily_steps)
+daily_mean <- mean(daily_steps)
+daily_median <- median(daily_steps)
+```
+
+The mean of the per-day steps is `r daily_mean`   
+The median of the per-day steps is `r daily_median`
 
 ## What is the average daily activity pattern?
+```{r fig.width=7, fig.height=6, echo=TRUE}
+by_interval_act <- split(complete_act, complete_act$interval, drop=TRUE)
 
+interval_steps <- vector()
+for(interval in by_interval_act){
+  interval_steps <- append(interval_steps, sum(interval$steps))
+}
+
+plot(interval_steps, type="l", ylab = "Steps Per Interval", xlab = "Interval Identifier")
+max_interval <- which.max(interval_steps)
+```
+
+The interval with the most steps is interval `r max_interval`
 
 
 ## Imputing missing values
+```{r echo=TRUE}
+total_count <- length(act$date)
+temp <- act[complete.cases(act),]
+complete_count <- length(temp$date)
+no_of_na <- total_count - complete_count
+```
+
+I feel like this is kind of cheating, but I just took the total # of cases and subtracted the # of complete cases to get the total # of cases containing NA's.  
+
+The number of cases containing an NA is `r no_of_na`
+
+```{r}
+# bydate_means <- bydate_act$"steps")
+bydate_means <- aggregate(complete_act$steps, by=list(complete_act$date), mean)
+names(bydate_means) <- c("date", "mean")
+for(d in names(bydate_act)){
+  filler <- bydate_means[[d]]$mean
+  bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] <- filler
+}
+filled_act <- bydate_act
+# Actually filled the bydate_act, since we'll use this data set going forward.
+```
+
+
 
 
 
