@@ -54,6 +54,9 @@ The interval with the most steps is interval `r max_interval`
 
 
 ## Imputing missing values
+
+Calculating the # of cases containing NA values.  I 
+
 ```{r echo=TRUE}
 total_count <- length(act$date)
 temp <- act[complete.cases(act),]
@@ -65,20 +68,54 @@ I feel like this is kind of cheating, but I just took the total # of cases and s
 
 The number of cases containing an NA is `r no_of_na`
 
+
+
 ```{r}
-# bydate_means <- bydate_act$"steps")
-bydate_means <- aggregate(complete_act$steps, by=list(complete_act$date), mean)
-names(bydate_means) <- c("date", "mean")
-for(d in names(bydate_act)){
-  filler <- bydate_means[[d]]$mean
-  bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] <- filler
-}
-filled_act <- bydate_act
-# Actually filled the bydate_act, since we'll use this data set going forward.
+mydf <- data.frame()
+bydate_all_act <- split(act, act$date)
+for(l in bydate_all_act){
+    daymean <- mean(l$steps, na.rm = TRUE)
+    l$steps[is.na(l$steps)] <- daymean
+    mydf <- rbind(l)
+    }
+    
+    
+# if(is.na(l)==TRUE){
+#     mydf <- data.frame(bydate_all_act[l$date[1]])  # totally arbitrary number... they're all the same
+#     names(mydf) <- c("steps", "date", "interval")
+#     day_avg <- mean(mydf$steps)
+#     print(day_avg)
+#     } else {print("not NA")}
+# }    
+# # bydate_means <- bydate_act$"steps")
+# bydate_means <- aggregate(act$steps, by=list(act$date), mean, na.action = na.omit)
+# names(bydate_means) <- c("date", "mean")
+# i=1
+# for(d in names(bydate_act)){
+#   filler <- bydate_means$mean[i]
+#   bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] <- filler
+#   i=i+1 # I know... not very imaganinative... running out of time
+#   
+# }
+# filled_act <- bydate_act
+# Actually filled the bydate_act, since we'll use this data set going forward.  Also 
+```
+
+Now making a histogram of hte total steps per day with the filled values:
+```{r}
+# filled_daily_steps <- vector()
+# for(dd in bydate_act){
+#  filled_daily_steps <- append(filled_daily_steps, as.numeric(sum(dd$steps)))
+#  mean(bydate_act[["2012-11-29"]]$"steps")      # just for future use, if necessary
+# hist(mydf$steps)
 ```
 
 
+Glargh... I'm out of time, but I was very close.  Here's the pseudocode:
 
-
+For(line in activityDataFrame){
+  
+  if (line$steps == NA){line$steps <- mean(activityDataFrame[line$date])} else {print("something snarky")}
+}
 
 ## Are there differences in activity patterns between weekdays and weekends?

@@ -102,21 +102,50 @@ plot(interval_steps, type=&quot;l&quot;, ylab = &quot;Steps Per Interval&quot;, 
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
+<p>Calculating the # of cases containing NA values. I</p>
 <pre class="r"><code>total_count &lt;- length(act$date)
 temp &lt;- act[complete.cases(act),]
 complete_count &lt;- length(temp$date)
 no_of_na &lt;- total_count - complete_count</code></pre>
 <p>I feel like this is kind of cheating, but I just took the total # of cases and subtracted the # of complete cases to get the total # of cases containing NA’s.</p>
 <p>The number of cases containing an NA is 2304</p>
-<pre class="r"><code># bydate_means &lt;- bydate_act$&quot;steps&quot;)
-bydate_means &lt;- aggregate(complete_act$steps, by=list(complete_act$date), mean)
-names(bydate_means) &lt;- c(&quot;date&quot;, &quot;mean&quot;)
-for(d in names(bydate_act)){
-  filler &lt;- bydate_means[[d]]$mean
-  bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] &lt;- filler
-}
-filled_act &lt;- bydate_act
-# Actually filled the bydate_act, since we'll use this data set going forward.</code></pre>
+<pre class="r"><code>mydf &lt;- data.frame()
+bydate_all_act &lt;- split(act, act$date)
+for(l in bydate_all_act){
+    daymean &lt;- mean(l$steps, na.rm = TRUE)
+    l$steps[is.na(l$steps)] &lt;- daymean
+    mydf &lt;- rbind(l)
+    }
+    
+    
+# if(is.na(l)==TRUE){
+#     mydf &lt;- data.frame(bydate_all_act[l$date[1]])  # totally arbitrary number... they're all the same
+#     names(mydf) &lt;- c(&quot;steps&quot;, &quot;date&quot;, &quot;interval&quot;)
+#     day_avg &lt;- mean(mydf$steps)
+#     print(day_avg)
+#     } else {print(&quot;not NA&quot;)}
+# }    
+# # bydate_means &lt;- bydate_act$&quot;steps&quot;)
+# bydate_means &lt;- aggregate(act$steps, by=list(act$date), mean, na.action = na.omit)
+# names(bydate_means) &lt;- c(&quot;date&quot;, &quot;mean&quot;)
+# i=1
+# for(d in names(bydate_act)){
+#   filler &lt;- bydate_means$mean[i]
+#   bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] &lt;- filler
+#   i=i+1 # I know... not very imaganinative... running out of time
+#   
+# }
+# filled_act &lt;- bydate_act
+# Actually filled the bydate_act, since we'll use this data set going forward.  Also </code></pre>
+<p>Now making a histogram of hte total steps per day with the filled values:</p>
+<pre class="r"><code># filled_daily_steps &lt;- vector()
+# for(dd in bydate_act){
+#  filled_daily_steps &lt;- append(filled_daily_steps, as.numeric(sum(dd$steps)))
+#  mean(bydate_act[[&quot;2012-11-29&quot;]]$&quot;steps&quot;)      # just for future use, if necessary
+# hist(mydf$steps)</code></pre>
+<p>Glargh… I’m out of time, but I was very close. Here’s the pseudocode:</p>
+<p>For(line in activityDataFrame){</p>
+<p>if (line<span class="math">\(steps == NA){line\)</span>steps &lt;- mean(activityDataFrame[line$date])} else {print(“something snarky”)} }</p>
 </div>
 <div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
