@@ -1,11 +1,11 @@
 # Reproducible Research: Peer Assessment 1
 
-
 ## Loading and preprocessing the data
 
 Below, the data are read using read.csv, then incomplete cases are eliminated and I split the data frame using split by $date.  
 
 ```{r echo=TRUE}
+par(mfrow=c(1,1))
 options(scipen=4)
 activity_filename <- "activity.csv"
 act <- read.csv(activity_filename, stringsAsFactors=FALSE)
@@ -64,58 +64,73 @@ complete_count <- length(temp$date)
 no_of_na <- total_count - complete_count
 ```
 
-I feel like this is kind of cheating, but I just took the total # of cases and subtracted the # of complete cases to get the total # of cases containing NA's.  
+I just took the total # of cases and subtracted the # of complete cases to get the total # of cases containing NA's.  
 
 The number of cases containing an NA is `r no_of_na`
 
-
+The strategy for filling in the missing blanks is to take the mean of each interval and then match up the interval that's NA and replace with the interval mean for that interval.  There are still a lot of 0's, even after replacing the NA values, so in order show the difference, 
 
 ```{r}
-mydf <- data.frame()
-bydate_all_act <- split(act, act$date)
-for(l in bydate_all_act){
-    daymean <- mean(l$steps, na.rm = TRUE)
-    l$steps[is.na(l$steps)] <- daymean
-    mydf <- rbind(l)
-    }
-    
-    
-# if(is.na(l)==TRUE){
-#     mydf <- data.frame(bydate_all_act[l$date[1]])  # totally arbitrary number... they're all the same
-#     names(mydf) <- c("steps", "date", "interval")
-#     day_avg <- mean(mydf$steps)
-#     print(day_avg)
-#     } else {print("not NA")}
-# }    
-# # bydate_means <- bydate_act$"steps")
-# bydate_means <- aggregate(act$steps, by=list(act$date), mean, na.action = na.omit)
-# names(bydate_means) <- c("date", "mean")
-# i=1
-# for(d in names(bydate_act)){
-#   filler <- bydate_means$mean[i]
-#   bydate_act[[d]]$steps[which(is.na(bydate_act[[d]]$steps))] <- filler
-#   i=i+1 # I know... not very imaganinative... running out of time
-#   
-# }
-# filled_act <- bydate_act
-# Actually filled the bydate_act, since we'll use this data set going forward.  Also 
-```
+na_act <- act
+interval_avg <- aggregate(act$steps ~ act$interval, FUN=mean)
+names(interval_avg) <- c("interval", "avsteps")
+ia <- interval_avg
+for(i in 1:nrow(na_act)){
+  if(is.na(na_act[i,1]) == TRUE){
+    na_act[i,1] <- ia[ia$interval == na_act[i,3],]$avsteps
 
-Now making a histogram of hte total steps per day with the filled values:
-```{r}
-# filled_daily_steps <- vector()
-# for(dd in bydate_act){
-#  filled_daily_steps <- append(filled_daily_steps, as.numeric(sum(dd$steps)))
-#  mean(bydate_act[["2012-11-29"]]$"steps")      # just for future use, if necessary
-# hist(mydf$steps)
-```
-
-
-Glargh... I'm out of time, but I was very close.  Here's the pseudocode:
-
-For(line in activityDataFrame){
-  
-  if (line$steps == NA){line$steps <- mean(activityDataFrame[line$date])} else {print("something snarky")}
+    } 
 }
+hist(na_act$steps[act$steps!=0], main="Non-Zero Steps with Imputed Values", xlab="# of Steps", ylab="Count")
+```
+Now, the assignment says to do this:
+Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```{r}
+na_means <- aggregate(na_act$steps ~ na_act$date, FUN=mean)
+orig_means <- aggregate(act$steps ~ act$date, FUN=mean)
+par(mfrow=c(2,1))
+plot(na_means[,2], type="l",main="Imputed Means", xlab="day", ylab="mean")
+plot(orig_means[,2], type="l", main="Imputed Means", xlab="day", ylab="mean")
+
+```
+
+Now the medians:
+```{r}
+na_medians <- aggregate(na_act$steps ~ na_act$date, FUN=median)
+orig_medians <- aggregate(act$steps ~ act$date, FUN=median, na.rm=TRUE)
+par(mfrow=c(2,1))
+plot(na_medians[,2], type="l", main="Imputed Medians", xlab="day", ylab="Median")
+plot(orig_medians[,2], type="l", main="Original Medians", xlab="day", ylab="Median")
+```
+
+So the means barely changed, but the medians look significantly different.  This doesn't seem right, since the median is just the centric values of the distribution, but I've been over it a few times and can't seem to get a resolution, so I'll stick with these results for now -- perhaps I'll take another look after the rest is complete.
+
+Regarding the impact on the total # of steps per day, these two graphs illustrate the differences:
+
+```{r}
+na_sums <- aggregate(na_act$steps ~ na_act$date, FUN=sum)
+orig_sums <- aggregate(act$steps ~ act$date, FUN=sum)
+par(mfrow=c(2,1))
+plot(na_sums[,2], type="l", main="Imputed Sums", xlab="day", ylab="sum")
+plot(orig_sums[,2], type="l", main="Original Sums", xlab="day", ylab="sum")
+```
+
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+# wknd <- act
+# wkdy <- act
+# wknd$date <- weekdays(as.POSIXct(act$date))
+# wkdy$date <- weekdays(as.POSIXct(act$date))
+wkact <- na_act
+wkact$day <- weekdays(as.POSIXct(act$date))
+wkact$daytype[wkact$day %in% c("Saturday", "Sunday")] <- "weekend"
+wkact$daytype[wkact$day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")] <- "weekday"
+# cbind(wknd, wknd[wknd$date %in% c("Saturday", "Sunday"),]])
+# wkdy <- wkdy[wkdy$date %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),]
+wknd_by_interval <- aggregate(wkact[wkact$daytype=="weekend",1] ~ wkact[wkact$daytype=="weekend", 3], FUN=sum)
+plot(wknd_by_interval, type="l", main = "Weekend by Interval", xlab="interval", ylab = "step sum")
+wkdy_by_interval <- aggregate(wkact[wkact$daytype=="weekday",1] ~ wkact[wkact$daytype=="weekday", 3], FUN=sum)
+plot(wkdy_by_interval, type="l", main = "Weekday by Interval", xlab="interval", ylab = "step sum")
+```
