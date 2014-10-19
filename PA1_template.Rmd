@@ -1,3 +1,6 @@
+---
+output: pdf_document
+---
 # Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
@@ -134,3 +137,5 @@ plot(wknd_by_interval, type="l", main = "Weekend by Interval", xlab="interval", 
 wkdy_by_interval <- aggregate(wkact[wkact$daytype=="weekday",1] ~ wkact[wkact$daytype=="weekday", 3], FUN=sum)
 plot(wkdy_by_interval, type="l", main = "Weekday by Interval", xlab="interval", ylab = "step sum")
 ```
+
+Yes, there is more activity in the later intervals during the weekend (probably during work hours) and less activity on the weekdays.
