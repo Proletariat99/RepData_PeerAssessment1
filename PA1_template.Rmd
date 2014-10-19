@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: pdf_document
 ---
 ## Reproducible Research: Peer Assessment 1
 
@@ -84,8 +84,6 @@ orig_medians <- aggregate(act$steps ~ act$date, FUN=median, na.rm=TRUE)
 par(mfrow=c(2,1))
 plot(na_means[,2], type="l",main="Imputed Means", xlab="day", ylab="mean")
 plot(orig_means[,2], type="l", main="Imputed Means", xlab="day", ylab="mean")
-#plot(na_medians[,2], type="l", main="Imputed Medians", xlab="day", ylab="Median")
-#plot(orig_medians[,2], type="l", main="Original Medians", xlab="day", ylab="Median")
 ```
 So the means barely changed, but the medians look significantly different.  This doesn't seem right, since the median is just the centric values of the distribution, but I've been over it a few times and can't seem to get a resolution, so I'll stick with these results for now -- perhaps I'll take another look after the rest is complete.
 
